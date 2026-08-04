@@ -11,7 +11,7 @@ class Raindrops_Effect extends Effect //<>//
 
   Toggle interactionToggle, directionToggle, bwToggle;
   Slider fadeSpeedSlider, densitySlider;
-  int tmpCounter, maxSize;
+  int tmpCounter, maxSize, dropCount;
   int halfWidth = stg.width/2;
   int halfHeight = stg.height/2;
   int dirUP=1;
@@ -74,8 +74,10 @@ class Raindrops_Effect extends Effect //<>//
   class Drop {
     int posX, posY, direction, hue;
     float size, targetSize;
-    
+    boolean secondary;  // drops alternate between the two Art-Net colours
+
     Drop(int dir) {
+      secondary = (dropCount++ % 2)==1;
       targetSize = random(maxSize / 100, maxSize / 10);
       posX = int(random(halfWidth*-1, halfWidth));
       posY = int(random(halfHeight*-1, halfHeight));
@@ -93,7 +95,8 @@ class Raindrops_Effect extends Effect //<>//
       if (direction == dirUP && size >= targetSize) {
        direction = dirDOWN;
      }
-     stg.fill(hue % 360, bwToggle.getState() ? 0 : 100, 100);
+     float sat = bwToggle.getState() ? 0 : 100;
+     stg.fill(secondary ? secondaryColor(hue, sat, 100) : mainColor(hue, sat, 100));
      if (size > 0) {
        stg.ellipse(posX, posY, size, size);
      }

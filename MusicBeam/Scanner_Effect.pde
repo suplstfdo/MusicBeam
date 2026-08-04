@@ -49,7 +49,7 @@ class Scanner_Effect extends Effect
     weight = int(weightSlider.getValue());
     speed = speedSlider.getValue();
 
-    stg.stroke(hue, 100, 100);
+    stg.stroke(mainColor(hue));
     stg.strokeWeight(weight);
 
     rotation = (rotation+speed/20)%(9*PI);
@@ -77,14 +77,14 @@ class Scanner_Effect extends Effect
       LinesDissolve();
       resetStage();
       rotate(PI/2);
-      stg.fill((hue+120)%360, 100, 100);
+      stg.fill(secondaryColor((hue+120)%360));
       LinesDissolve();
     } else if (rotation<PI*9)
     {
       LinesJoin();
       resetStage();
       rotate(PI/2);
-      stg.fill((hue+120)%360, 100, 100);
+      stg.fill(secondaryColor((hue+120)%360));
       LinesJoin();
     }
 
@@ -96,7 +96,7 @@ class Scanner_Effect extends Effect
   {
     rotate(rotation);
     stg.line(-stg.getMaxRadius(), 0, stg.getMaxRadius(), 0);
-    stg.stroke((hue+120)%360, 100, 100);
+    stg.stroke(secondaryColor((hue+120)%360));
     stg.line(0, -stg.getMaxRadius(), 0, stg.getMaxRadius());
   }
 
@@ -104,18 +104,18 @@ class Scanner_Effect extends Effect
   {
     rotate(-rotation);
     stg.line(-stg.getMaxRadius(), 0, stg.getMaxRadius(), 0);
-    stg.stroke((hue+120)%360, 100, 100);
+    stg.stroke(secondaryColor((hue+120)%360));
     stg.line(0, -stg.getMaxRadius(), 0, stg.getMaxRadius());
-    stg.stroke(hue, 100, 100);
+    stg.stroke(mainColor(hue));
   }
 
   void rotateOpposite()
   {
     rotate(rotation);
     stg.line(-stg.getMaxRadius(), 0, stg.getMaxRadius(), 0);
-    stg.stroke((hue+120)%360, 100, 100);
+    stg.stroke(secondaryColor((hue+120)%360));
     stg.line(0, -stg.getMaxRadius(), 0, stg.getMaxRadius());
-    stg.stroke(hue, 100, 100);
+    stg.stroke(mainColor(hue));
   }
 
   void LinesDissolve()
@@ -131,7 +131,7 @@ class Scanner_Effect extends Effect
     translate(0, (stg.height-weight)*(1-((rotation%PI)/PI))/2);
     stg.line(-stg.getMaxRadius(), 0, stg.getMaxRadius(), 0);
     translate(0, -(stg.height-weight)*(1-((rotation%PI)/PI)));
-    stg.stroke((hue+120)%360, 100, 100);
+    stg.stroke(secondaryColor((hue+120)%360));
     stg.line(-stg.getMaxRadius(), 0, stg.getMaxRadius(), 0);
   }
 }

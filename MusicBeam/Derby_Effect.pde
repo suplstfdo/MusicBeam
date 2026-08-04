@@ -74,14 +74,14 @@ class Derby_Effect extends Effect
       float posy = weight/2+height/3;
       float roty = -height/3 * sin(rotation);
       
-      stg.fill(hue, 100, 100);
+      stg.fill(mainColor(hue));
       
       stg.ellipse(posx+rotx, posy+roty, weight*0.9, weight*0.9);
       
       if (mirrorToggle.getState())
         stg.ellipse(posx-rotx, posy+roty, weight*0.9, weight*0.9);
         
-      stg.fill((hue+120)%360, 100, 100);
+      stg.fill(secondaryColor((hue+120)%360));
         
       stg.ellipse(posx+rotx, height/3 + posy-roty, weight*0.9, weight*0.9);
       

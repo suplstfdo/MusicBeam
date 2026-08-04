@@ -70,12 +70,12 @@ class RGBSpot_Effect extends Effect
       fader = frameRate/4;
     }
 
-    stg.fill(60*rc[0], 100, 100);
+    stg.fill(mainColor(60*rc[0]));
     stg.ellipse(rx[0], ry[0], radius, radius);
     translate(stg.width, stg.height);
     stg.ellipse(-rx[0], -ry[0], radius, radius);
     translate(-stg.width, -stg.height);
-    stg.fill(60*rc[1], 100, 5*fader);
+    stg.fill(secondaryColor(60*rc[1], 100, 5*fader));
     stg.ellipse(rx[1], ry[1], radius, radius);
     translate(stg.width, stg.height);
     stg.ellipse(-rx[1], -ry[1], radius, radius);

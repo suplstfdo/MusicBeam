@@ -3,17 +3,20 @@ import java.net.DatagramPacket;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// Art-Net (DMX over Ethernet) effect selection.
-// Reads a single DMX channel; its value selects the active effect by index
-// (0 = Blackout / no effect, 1..N = the other effects). Opt-in via the
-// "Art-Net (DMX)" toggle. Uses only the JDK, no extra libraries.
+// Art-Net (DMX over Ethernet) effect and colour control.
+// Channel 1 selects the active effect by index (0 = Blackout / no effect,
+// 1..N = the other effects), channels 2-4 carry the main colour as RGB and
+// channels 5-7 the secondary colour. Opt-in via the "Art-Net (DMX)" toggle.
+// Uses only the JDK, no extra libraries.
 
-static final byte[] ART_NET_ID    = "Art-Net\0".getBytes();
-static final int ART_NET_OP_DMX   = 0x5000; // ArtDMX opcode
-static final int ART_NET_DMX_DATA = 18;     // offset of the DMX data in an ArtDMX packet
-static final int ART_NET_PORT     = 6454;  // Art-Net standard UDP port
-static final int ART_NET_UNIVERSE = 0;     // 15-bit universe to listen on
-static final int ART_NET_CHANNEL  = 1;     // 1-indexed DMX channel = effect index
+static final byte[] ART_NET_ID          = "Art-Net\0".getBytes();
+static final int ART_NET_OP_DMX         = 0x5000; // ArtDMX opcode
+static final int ART_NET_DMX_DATA       = 18;     // offset of the DMX data in an ArtDMX packet
+static final int ART_NET_PORT           = 6454;   // Art-Net standard UDP port
+static final int ART_NET_UNIVERSE       = 0;      // 15-bit universe to listen on
+static final int ART_NET_CHANNEL        = 1;      // 1-indexed DMX channel = effect index
+static final int ART_NET_MAIN_CHANNEL   = 2;      // main colour, 3 channels: R, G, B
+static final int ART_NET_SECOND_CHANNEL = 5;      // secondary colour, 3 channels: R, G, B
 
 ArtNet artNet;
 
@@ -23,6 +26,13 @@ class ArtNet implements Runnable
   volatile boolean running = false;
   int lastValue = -1;  // edge-trigger; only touched by the receive thread
   DatagramSocket socket;
+
+  // The received colours as { hue 0-360, saturation 0-100, brightness 0-100 },
+  // or null while the console sends black (= colour not set). Written by the
+  // receive thread, read by the stage thread, hence volatile: a reader always
+  // sees either the complete previous or the complete new triplet.
+  volatile float[] mainColor = null;
+  volatile float[] secondaryColor = null;
 
   // Called from controlEvent() on the animation thread. Idempotent.
   void setEnabled(boolean on)
@@ -45,6 +55,8 @@ class ArtNet implements Runnable
       if (socket != null)
         socket.close();
       socket = null;
+      mainColor = null;  // hand the colours back to the effects' own hue controls
+      secondaryColor = null;
     }
   }
 
@@ -66,22 +78,45 @@ class ArtNet implements Runnable
     }
   }
 
-  // Read the selected channel of an ArtDMX packet and hand its value to the
-  // animation thread. Anything else is ignored.
+  // Read the effect and colour channels of an ArtDMX packet and hand their
+  // values to the drawing threads. Anything else is ignored. Channels beyond
+  // the end of the frame keep their previous value, so a console that only
+  // sends channel 1 still selects effects.
   void parse(byte[] b, int len)
   {
-    int i = ART_NET_DMX_DATA + ART_NET_CHANNEL - 1;
-    if (len > i
-      && Arrays.equals(b, 0, ART_NET_ID.length, ART_NET_ID, 0, ART_NET_ID.length)
-      && le16(b, 8) == ART_NET_OP_DMX
-      && (le16(b, 14) & 0x7fff) == ART_NET_UNIVERSE)
-    {
-      int value = b[i] & 0xff;
+    int channels = len - ART_NET_DMX_DATA;
+    if (channels < 1
+      || !Arrays.equals(b, 0, ART_NET_ID.length, ART_NET_ID, 0, ART_NET_ID.length)
+      || le16(b, 8) != ART_NET_OP_DMX
+      || (le16(b, 14) & 0x7fff) != ART_NET_UNIVERSE)
+      return;
+
+    if (channels >= ART_NET_CHANNEL) {
+      int value = b[ART_NET_DMX_DATA + ART_NET_CHANNEL - 1] & 0xff;
       if (value != lastValue) {  // edge-trigger so the GUI stays usable between changes
         lastValue = value;
         pending.set(value);
       }
     }
+
+    if (channels >= ART_NET_MAIN_CHANNEL + 2)
+      mainColor = readColor(b, ART_NET_DMX_DATA + ART_NET_MAIN_CHANNEL - 1);
+
+    if (channels >= ART_NET_SECOND_CHANNEL + 2)
+      secondaryColor = readColor(b, ART_NET_DMX_DATA + ART_NET_SECOND_CHANNEL - 1);
+  }
+
+  // Three RGB channels as an HSB triplet in the stage's colour space, or null
+  // for black. Black means "not set": a console that leaves the colour
+  // channels at zero keeps the effects on their own hue controls, and no
+  // colour can ever black out an effect.
+  float[] readColor(byte[] b, int i)
+  {
+    int r = b[i] & 0xff, g = b[i+1] & 0xff, bl = b[i+2] & 0xff;
+    if ((r | g | bl) == 0)
+      return null;
+    float[] hsb = java.awt.Color.RGBtoHSB(r, g, bl, null);
+    return new float[] { hsb[0]*360, hsb[1]*100, hsb[2]*100 };
   }
 
   // 16 bit little-endian read.
@@ -96,5 +131,12 @@ class ArtNet implements Runnable
     int v = pending.getAndSet(Integer.MIN_VALUE);
     if (v >= 0 && v < effectArray.length)
       effectArray[v].activate();
+
+    // a packet still in flight while the toggle went off can resurrect a
+    // colour after setEnabled() cleared it; drop it again on the next frame
+    if (!running && (mainColor!=null || secondaryColor!=null)) {
+      mainColor = null;
+      secondaryColor = null;
+    }
   }
 }

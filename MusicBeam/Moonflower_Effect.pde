@@ -92,7 +92,7 @@ public class Moonflower_Effect extends Effect
     rotation = (rotation + 0.01*(direction/(1-speedSlider.getValue())))%(PI*2);
 
     rotate(rotation);
-    stg.fill(hueSlider.getValue()%360, bwToggle.getState()?0:100, 100);
+    stg.fill(mainColor(hueSlider.getValue(), bwToggle.getState()?0:100, 100));
 
     float slice = 2 * PI / pts;
     for (int i = 0; i < pts; i++) {
@@ -101,7 +101,7 @@ public class Moonflower_Effect extends Effect
     }
 
     if (stereoToggle.getState()) {
-      stg.fill((hueSlider.getValue()+120)%360, bwToggle.getState()?0:100, 100);
+      stg.fill(secondaryColor(hueSlider.getValue()+120, bwToggle.getState()?0:100, 100));
       rotate(-2*rotation);
     }
     float slice2 = 2 * PI / (pts/2);
@@ -109,7 +109,7 @@ public class Moonflower_Effect extends Effect
       float angle = slice2 * i + slice/2;
       stg.ellipse((radius/2)*cos(angle), (radius/2)*sin(angle), 0.7*radius/2, 0.7*radius/2);
     }
-    stg.fill(hueSlider.getValue()%360, bwToggle.getState()?0:100, 100);
+    stg.fill(mainColor(hueSlider.getValue(), bwToggle.getState()?0:100, 100));
     stg.ellipse(0, 0, 0.7*radius/2, 0.7*radius/2);
 
     if (timer>=0)

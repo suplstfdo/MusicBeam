@@ -60,7 +60,7 @@ class Snowstorm_Effect extends Effect
       float posx, posy;
       posx = (2*radiusSlider.getValue()*(i%px))+x.get(i);
       posy = (2*radiusSlider.getValue()*(i/px))+y.get(i);
-      stg.fill((hueSlider.getValue())%360, bwToggle.getState()?0:100, 100);
+      stg.fill(mainColor(hueSlider.getValue(), bwToggle.getState()?0:100, 100));
       stg.ellipse(posx, posy, r.get(i), r.get(i));
     }
 

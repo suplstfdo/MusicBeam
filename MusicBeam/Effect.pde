@@ -102,6 +102,43 @@ public abstract class Effect
     return ctrl.in.mix.level();
   }
 
+  // Colour for the effect's primary elements. hue/sat/bri are the effect's own
+  // values and are used unless a main colour arrives over Art-Net; that colour
+  // then replaces hue and saturation and scales the brightness, so fades and
+  // pulses an effect does through bri keep working.
+  color mainColor(float hue, float sat, float bri)
+  {
+    return artNetColor(artNet==null?null:artNet.mainColor, hue, sat, bri);
+  }
+
+  color mainColor(float hue)
+  {
+    return mainColor(hue, 100, 100);
+  }
+
+  // Colour for the effect's contrasting elements. Falls back to the Art-Net
+  // main colour when no secondary colour is sent, so transmitting a single
+  // colour tints the whole effect instead of leaving half of it behind.
+  color secondaryColor(float hue, float sat, float bri)
+  {
+    float[] c = null;
+    if (artNet!=null)
+      c = artNet.secondaryColor!=null ? artNet.secondaryColor : artNet.mainColor;
+    return artNetColor(c, hue, sat, bri);
+  }
+
+  color secondaryColor(float hue)
+  {
+    return secondaryColor(hue, 100, 100);
+  }
+
+  color artNetColor(float[] c, float hue, float sat, float bri)
+  {
+    if (c==null)
+      return stg.color(hue%360, sat, bri);
+    return stg.color(c[0], c[1], c[2]*bri/100);
+  }
+
   void hideControls()
   {
     controlGroup.hide();

@@ -60,10 +60,10 @@ class Polygon_Effect extends Effect
     rotate(rotation);
     for (int i=0; i < points; i++) {
       int prev = (i + 1) % points;
-      stg.stroke((((i%2)==1?120:0)+hue)%360, 100, 100);
+      stg.stroke((i%2)==1 ? secondaryColor(hue+120) : mainColor(hue));
       stg.strokeWeight(weight);
       stg.line(px[i], py[i], px[prev], py[prev]);
-      stg.fill(-1);
+      stg.fill(mainColor(hue, 0, 100));  // white corner dots, tinted once Art-Net sends a colour
       stg.noStroke();
       stg.ellipse(px[i], py[i], 1.5*weight, 1.5*weight);
       stg.ellipse(px[prev], py[prev], 1.5*weight, 1.5*weight);

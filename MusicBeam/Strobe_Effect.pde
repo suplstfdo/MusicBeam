@@ -54,6 +54,10 @@ public class Strobe_Effect extends Effect
 
   boolean state = false;
 
+  // flips on every flash so consecutive flashes alternate between the Art-Net
+  // main and secondary colour
+  boolean alternate = false;
+
   float timer = 0;
 
   Button manualButton;
@@ -85,6 +89,7 @@ public class Strobe_Effect extends Effect
     } 
     else if (!state && isTriggered() && timer <= 0) {
       state = true;
+      alternate = !alternate;
       timer = frameRate/2-delaySlider.getValue();
     }
 
@@ -94,7 +99,10 @@ public class Strobe_Effect extends Effect
     if (aHueToggle.getState())
       hueSlider.setValue((hueSlider.getValue()+1)%360);
 
-    stg.fill(hueSlider.getValue(), bwToggle.getState()?0:100, 100);
+    float sat = bwToggle.getState()?0:100;
+    stg.fill(alternate
+      ? secondaryColor(hueSlider.getValue(), sat, 100)
+      : mainColor(hueSlider.getValue(), sat, 100));
     if (state)
       stg.rect(-stg.getMaxRadius()/2, -stg.getMaxRadius()/2, stg.getMaxRadius(), stg.getMaxRadius());
   }

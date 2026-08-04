@@ -87,6 +87,7 @@ class Vortex_Effect extends Effect
     }
 
 
+    boolean swapped = false;
     if (dualColourToggle.getState() && swapColourToggle.getState()) {
       if (isHat()) {
         swap=!swap;
@@ -95,12 +96,21 @@ class Vortex_Effect extends Effect
         int tmp=hue;
         hue=hue2;
         hue2=tmp;
+        swapped = true;
       }
     }
 
-    stg.stroke(hue%360, bwToggle.getState()?0:100, 100);
+    // the second arc only gets the Art-Net secondary colour while this effect
+    // runs in dual colour mode; swapping exchanges the two colours as well
+    float sat = bwToggle.getState()?0:100;
+    color c1 = swapped ? secondaryColor(hue, sat, 100) : mainColor(hue, sat, 100);
+    color c2 = !dualColourToggle.getState() || swapped
+      ? mainColor(hue2, sat, 100)
+      : secondaryColor(hue2, sat, 100);
+
+    stg.stroke(c1);
     stg.arc(0, 0, circleSize, circleSize, radians(offset), radians(getDegree(offset+gap)));
-    stg.stroke(hue2%360, bwToggle.getState()?0:100, 100);
+    stg.stroke(c2);
     stg.arc(0, 0, circleSize, circleSize, radians(getDegree(offset + 180)), radians(getDegree(offset + gap + 180)));
   }
 

@@ -66,7 +66,8 @@ class LaserBurst_Effect extends Effect
     }
     for (int i=0; i<pts.size(); i++) {
       Float[] k = pts.get(i);
-      stg.fill(hueSlider.getValue(), bwToggle.getState()?0:100, 100);
+      float sat = bwToggle.getState()?0:100;
+      stg.fill(mainColor(hueSlider.getValue(), sat, 100));
 
       float r;
       if (inverseToggle.getState()) {
@@ -77,7 +78,8 @@ class LaserBurst_Effect extends Effect
       }
 
       stg.ellipse(r*cos(k[1]), r*sin(k[1]), radiusSlider.getValue(), radiusSlider.getValue());
-      // stg.fill((hueSlider.getValue()+120)%360, bwToggle.getState()?0:100,100);
+      // the opposing beam of the pair carries the secondary colour
+      stg.fill(secondaryColor(hueSlider.getValue(), sat, 100));
       stg.ellipse(r*cos(k[1]+PI), r*sin(k[1]+PI), radiusSlider.getValue(), radiusSlider.getValue());
       if (k[0]>=1)
         pts.remove(i);

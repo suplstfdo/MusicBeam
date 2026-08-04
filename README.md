@@ -14,12 +14,26 @@ The latest releases can be found at: [musicbeam.org](http://www.musicbeam.org)
 
 ## Art-Net (DMX) Control
 
-The active effect can be selected over the network with Art-Net messages. The button **Art-Net (DMX)** starts a background thread that listens on UDP port 6454 for DMX frames and monitors channel 1 of universe 0. The channel value gets mapped to the available Effects. Channel value 0 maps to the Blackout effect.
+The active effect and its colours can be controlled over the network with Art-Net messages. The button **Art-Net (DMX)** starts a background thread that listens on UDP port 6454 for DMX frames of universe 0 and reads the following channels:
+
+| Channel | Function                                                            |
+|---------|---------------------------------------------------------------------|
+| 1       | Effect index. The value gets mapped to the available effects, 0 maps to the Blackout effect. |
+| 2, 3, 4 | Main colour as red, green and blue.                                 |
+| 5, 6, 7 | Secondary colour as red, green and blue.                            |
+
+Most effects draw their primary elements in the main colour and their contrasting elements in the secondary colour. An effect that has no use for a second colour ignores it.
+
+Black (all three channels at 0) means *not set*: the main colour falls back to the effect's own hue controls, the secondary colour falls back to the main colour. So a console that only sends channel 1 behaves exactly as before, and sending a single colour tints the whole effect. Channels that are missing from a frame keep their last value.
+
+The colour also carries brightness and saturation, so a dimmed or desaturated colour dims or washes out the effect. Fades and pulses an effect does on its own are scaled by it and keep working.
 
 It can be tried out using [`examples/artnet_test.py`](examples/artnet_test.py):
 
 ```console
-python3 examples/artnet_test.py 3     # select effect 3
+python3 examples/artnet_test.py 3            # select effect 3
+python3 examples/artnet_test.py 3 red        # effect 3 in red
+python3 examples/artnet_test.py 3 f00 00f    # effect 3, main red, secondary blue
 ```
 
 
